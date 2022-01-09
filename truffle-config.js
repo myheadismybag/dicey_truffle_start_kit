@@ -31,8 +31,10 @@ module.exports = {
     },
     kovan: {
       provider: () => {
-        return new HDWalletProvider(privateKeys, "wss://eth-kovan.alchemyapi.io/v2/pfdoEwEpUMSvLRkV4v5WGKxmic9EUU8d", 0, 1)
-        // return new HDWalletProvider(privateKeys, "https://eth-kovan.alchemyapi.io/v2/pfdoEwEpUMSvLRkV4v5WGKxmic9EUU8d", 0, 1)
+        // return new HDWalletProvider(privateKeys, `wss://eth-kovan.alchemyapi.io/v2/${process.env.ALCHEMY_ID}`, 0, 1)
+        return new HDWalletProvider(privateKeys, `https://eth-kovan.alchemyapi.io/v2/${process.env.ALCHEMY_ID}`, 0, 1)
+        // return new HDWalletProvider(privateKeys, `https://kovan.infura.io/v3/${process.env.INFURA_ID}`, 0, 1)
+        //return new HDWalletProvider(privateKeys, `wss://kovan.infura.io/ws/v3/${process.env.INFURA_ID}`, 0, 1)
       },
       network_id: '42',
       skipDryRun: true,
