@@ -3,6 +3,12 @@ require('dotenv').config()
 
 const mnemonic = process.env.MNEMONIC
 const url = process.env.RPC_URL
+const key1 = process.env.KEY_1
+const key2 = process.env.KEY_2
+
+var privateKeys = [
+    key1, key2
+]
 
 module.exports = {
   networks: {
@@ -25,15 +31,28 @@ module.exports = {
     },
     kovan: {
       provider: () => {
-        return new HDWalletProvider(mnemonic, url)
+        return new HDWalletProvider(privateKeys, "wss://eth-kovan.alchemyapi.io/v2/pfdoEwEpUMSvLRkV4v5WGKxmic9EUU8d", 0, 1)
+        // return new HDWalletProvider(privateKeys, "https://eth-kovan.alchemyapi.io/v2/pfdoEwEpUMSvLRkV4v5WGKxmic9EUU8d", 0, 1)
       },
       network_id: '42',
-      skipDryRun: true
+      skipDryRun: true,
+      // gas: 5000000,
+      // gasPrice: 45000000000,
+      confirmations: 2,
+      timeoutBlocks: 200,
+      websocket: true,
+      timeoutBlocks: 50000,
+      networkCheckTimeout: 1000000      
     },
   },
   compilers: {
     solc: {
+      // version: '0.8.4',
       version: '0.6.6',
     },
   },
+  mocha: {
+    enableTimeouts: false,
+    before_timeout: 240000 // Here is 2min but can be whatever timeout is suitable for you.
+  }
 }
