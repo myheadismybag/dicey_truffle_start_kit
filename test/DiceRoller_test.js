@@ -17,7 +17,7 @@ contract('DiceRoller', accounts => {
   const stranger = accounts[2]
   const consumer = accounts[3]
 
-  console.log('aaaa: ' + JSON.stringifyaddr1)
+  console.log('aaaa: ' + addr1)
   console.log('aaaa: ' + addr2)
 
   beforeEach(async () => {
@@ -448,7 +448,92 @@ contract('DiceRoller', accounts => {
     // assert.equal(userRolls.length, 0, "getUserRolls should be 0 for address 2");
   });
  
+
+  it('will return an array from getUserRolls for all rolls by an address.', async () => {
+    // console.log('Contract address: ' + diceRoller.address);
+    let userRolls = await diceRoller.getUserRolls(addr1)
+    assert.equal(userRolls.length, 0, "getUserRolls should be 0");
+  });
+
+  it('will return an array from getUserRolls for all rolls by an address when they roll.', async () => {
+    const numberOfDie = 4;
+    const dieSize = 10;
+    const adjustment = 0;
+    const result = 13;
+    await diceRoller.hasRolled(numberOfDie, dieSize, adjustment, result);
+
+    let userRolls = await diceRoller.getUserRolls(addr1)
+    // console.log('userRolls: ' + userRolls);
+    assert.equal(userRolls.length, 1, "getUserRolls should be 1");
+
+    // Rolling again will not change the result
+    await diceRoller.hasRolled(numberOfDie, dieSize, adjustment, result);
+
+    userRolls = await diceRoller.getUserRolls(addr1)
+    //console.log('userRolls: ' + userRolls);
+    assert.equal(userRolls.length, 2, "getUserRolls should be 2");
+  });
+
+  it('will return an array of structs from getUserRolls for all rolls by an address when they roll.', async () => {
+
+    const numberOfDie = [4,7];
+    const dieSize = [6,7];
+    const adjustment = [2,-3];
+    const result = [13,5];
+    await diceRoller.hasRolled(numberOfDie[0], dieSize[0], adjustment[0], result[0], {from: accounts[1]});
+
+    let userRolls = await diceRoller.getUserRolls(accounts[1])
+    assert.equal(userRolls.length, 1, "getUserRolls should be 1");
+
+    // Rolling again will not change the result
+    await diceRoller.hasRolled(numberOfDie[1], dieSize[1], adjustment[1], result[1], {from: accounts[1]});
+
+    userRolls = await diceRoller.getUserRolls(accounts[1])
+    //console.log('userRolls: ' + userRolls);
+    assert.equal(userRolls.length, 2, "getUserRolls should be 2");
+
+    /*
+    struct DiceRollee {
+        address rollee;
+        uint timestamp; /// When the die were rolled
+        uint256 randomness; /// Stored to help verify/debug results
+        uint8 numberOfDie; /// 1 = roll once, 4 = roll four die
+        uint8 dieSize; // 6 = 6 sided die, 20 = 20 sided die
+        int8 adjustment; /// Can be a positive or negative value
+        int16 result; /// Result of all die rolls and adjustment. Can be negative because of a negative adjustment.
+        /// Max value can be 1000 (10 * 100 sided die rolled)
+        bool hasRolled; /// Used in some logic tests
+        uint8[] rolledValues; /// array of individual rolls. These can only be positive.
+    }
+    */
+
+    const rollerData = diceRolleeArrayToJSON( userRolls)
+    // console.log('tttt ' + JSON.stringify(rollerData));
+
+    const roll1 = rollerData[0];
+    const roll2 = rollerData[1];
+    
+    // address should match the roller's address
+    assert.equal(roll1.address, accounts[1], "Roller addresses should match");
+    assert.equal(roll2.address, accounts[1], "Roller addresses should match");
+
+    // The first structure should match the first roll
+    assert.equal(roll1.numberOfDie, numberOfDie[0], "Roller addresses should match");
+    assert.equal(roll1.dieSize, dieSize[0], "Roller addresses should match");
+    assert.equal(roll1.adjustment, adjustment[0], "Roller addresses should match");
+    assert.equal(roll1.result, result[0], "Roller addresses should match");
+
+    // The second structure should match the first roll
+    assert.equal(roll2.numberOfDie, numberOfDie[1], "Roller addresses should match");
+    assert.equal(roll2.dieSize, dieSize[1], "Roller addresses should match");
+    assert.equal(roll2.adjustment, adjustment[1], "Roller addresses should match");
+    assert.equal(roll2.result, result[1], "Roller addresses should match");
+
+    let userCount = await diceRoller.getAllUsersCount();
+    assert.equal(userCount.toNumber(), 1, "getAllUsersCount should be 1");
+  });
 });
+
 
 // used to convert data returned from a solidity event to a javascript object
 function diceRolleeArrayToJSON(diceRolleeArray) {
