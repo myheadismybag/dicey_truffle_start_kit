@@ -51,6 +51,14 @@ module.exports = {
     solc: {
       // version: '0.8.4',
       version: '0.6.6',
+      // Solution 1. Turn on solidity optimization
+      settings: {
+        evmVersion: 'byzantium', // Default: "petersburg"
+        optimizer: {
+          enabled: true,
+          runs: 1500
+        }
+      }
     },
   },
   mocha: {
