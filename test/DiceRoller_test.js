@@ -293,7 +293,6 @@ contract('DiceRoller', accounts => {
       assert.equal(userRolls[0][3], numberOfDie, "number of dice do not match");
       assert.equal(userRolls[0][4], dieSize, "die size do not match");
       assert.equal(userRolls[0][5], adjustment, "adjustments do not match");
-      assert.equal(userRolls[0][7], true, "hasRolled flag should be true");
 
     }
     catch(err){

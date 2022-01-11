@@ -38,6 +38,7 @@ module.exports = {
       },
       network_id: '42',
       skipDryRun: true,
+	    /*
       // gas: 5000000,
       // gasPrice: 45000000000,
       confirmations: 2,
@@ -45,12 +46,19 @@ module.exports = {
       websocket: true,
       timeoutBlocks: 50000,
       networkCheckTimeout: 1000000      
+	    */
     },
   },
   compilers: {
     solc: {
       // version: '0.8.4',
       version: '0.6.6',
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 500   // Optimize for how many times you intend to run the code
+        },
+      },
     },
   },
   mocha: {
