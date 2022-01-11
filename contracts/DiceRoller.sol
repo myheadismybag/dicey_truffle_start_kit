@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: MIT
-// pragma solidity ^0.8.4;
+//pragma solidity ^0.8.0;
 pragma solidity ^0.6.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+//import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
+//import "@openzeppelin/contracts/security/Pausable.sol";
 
 /*
     https://docs.chain.link/docs/vrf-contracts/
@@ -42,15 +44,14 @@ contract DiceRoller is Ownable {
 
     struct DiceRollee {
         address rollee;
-        uint256 timestamp; /// When the die were rolled
-        uint256 randomness; /// Stored to help verify/debug results
-        uint256 numberOfDie; /// 1 = roll once, 4 = roll four die
-        uint8 dieSize; // 6 = 6 sided die, 20 = 20 sided die
-        int8 adjustment; /// Can be a positive or negative value
-        int16 result; /// Result of all die rolls and adjustment. Can be negative because of a negative adjustment.
-        /// Max value can be 1000 (10 * 100 sided die rolled)
-        bool hasRolled; /// Used in some logic tests
-        uint8[] rolledValues; /// array of individual rolls. These can only be positive.
+        uint256 timestamp; // When the die were rolled
+        uint256 randomness; // Stored to help verify/debug results
+        uint16 numberOfDie; // 1 = roll once, 4 = roll four die
+        uint16 dieSize; // 6 = 6 sided die, 20 = 20 sided die
+        int16 adjustment; // Can be a positive or negative value
+        int16 result; // Result of all die rolls and adjustment. Can be negative because of a negative adjustment.
+        // Max value can be 1000 (10 * 100 sided die rolled)
+        uint8[] rolledValues; // array of individual rolls. These can only be positive.
     }
 
     /**
@@ -83,7 +84,7 @@ contract DiceRoller is Ownable {
         bytes32 indexed requestId, 
         address indexed roller, 
         uint8[] rolledvalues, 
-        int8 adjustment, 
+        int16 adjustment, 
         int16 result
         );
 
@@ -125,12 +126,6 @@ contract DiceRoller is Ownable {
     }
 
     /// Used to perform specific logic based on if user has rolled previoulsy or not.
-    function hasRolledOnce(address _member) public view returns(bool) {
-        // return (rollerHistory[_member].length > 0);
-        // return hasRolledBefore(_member); // works
-        return (getUserRollsCount(_member) > 0);
-    }
-    /// Used to perform specific logic based on if user has rolled previoulsy or not.
     function hasRolledBefore(address _member) public view returns(bool) {
         return (rollers[_member]);
     }
@@ -151,18 +146,6 @@ contract DiceRoller is Ownable {
         validateDieSize(_dieSize)
         validateAdjustment(_adjustment)
     {
-        // DiceRollee memory diceRollee = DiceRollee(
-        //         msg.sender, 
-        //         block.timestamp,
-        //         0, 
-        //         _numberOfDie, 
-        //         _dieSize, 
-        //         _adjustment, 
-        //         _result, 
-        //         true,
-        //         new uint8[](_numberOfDie)
-        //         );
-
         DiceRollee memory diceRollee = DiceRollee({
                 rollee: msg.sender, 
                 timestamp: block.timestamp,
@@ -171,15 +154,12 @@ contract DiceRoller is Ownable {
                 dieSize: _dieSize, 
                 adjustment: _adjustment, 
                 result: _result, 
-                hasRolled: true,
-                rolledValues: new uint8[](_numberOfDie)
+                rolledValues: new uint8[](0)
         });
 
-        currentRoll[msg.sender] = diceRollee;
         rollerHistory[msg.sender].push(diceRollee);
 
-        // /// Only add roller to this list once.
-        // // if (! hasRolledOnce(msg.sender)) {
+        /// Only add roller to this list once.
         if (! hasRolledBefore(msg.sender)) {
             rollers[msg.sender] = true;
             rollerAddresses.push(msg.sender);
@@ -212,24 +192,21 @@ contract DiceRoller is Ownable {
         // requestId = requestRandomness(chainLinkKeyHash, chainlinkVRFFee);
         rollersRandomRequest[requestId] = msg.sender;
 
-        DiceRollee memory diceRollee = DiceRollee(
-                msg.sender, 
-                block.timestamp,
-                0, 
-                _numberOfDie, 
-                _dieSize, 
-                _adjustment, 
-                ROLL_IN_PROGRESS, 
-                false,
-                new uint8[](_numberOfDie)
-                );
- 
+        DiceRollee memory diceRollee = DiceRollee({
+                rollee: msg.sender, 
+                timestamp: block.timestamp,
+                randomness: 0, 
+                numberOfDie: _numberOfDie, 
+                dieSize: _dieSize, 
+                adjustment: _adjustment, 
+                result: ROLL_IN_PROGRESS, 
+                rolledValues: new uint8[](_numberOfDie)
+        });
+
         /// Only add roller to this list once.
-        // if (! hasRolledOnce(msg.sender)) {
         if (! hasRolledBefore(msg.sender)) {
             rollers[msg.sender] = true;
             rollerAddresses.push(msg.sender);
-            diceRollee.hasRolled = true;
         }
 
         currentRoll[msg.sender] = diceRollee;
@@ -259,27 +236,26 @@ contract DiceRoller is Ownable {
         /// Simple hacky way to generate a requestId.
         requestId = keccak256(abi.encodePacked(chainLinkKeyHash, block.timestamp));
         rollersRandomRequest[requestId] = msg.sender;
-        DiceRollee memory diceRollee = DiceRollee(
-                msg.sender, 
-                block.timestamp,
-                0, 
-                _numberOfDie, 
-                _dieSize, 
-                _adjustment, 
-                ROLL_IN_PROGRESS, 
-                false,
-                new uint8[](_numberOfDie)
-                );
+
+        DiceRollee memory diceRollee = DiceRollee({
+                rollee: msg.sender, 
+                timestamp: block.timestamp,
+                randomness: 0, 
+                numberOfDie: _numberOfDie, 
+                dieSize: _dieSize, 
+                adjustment: _adjustment, 
+                result: ROLL_IN_PROGRESS, 
+                rolledValues: new uint8[](_numberOfDie)
+        });
+
+        currentRoll[msg.sender] = diceRollee;
 
         /// Only add roller to this list once.
-        // if (! hasRolledOnce(msg.sender)) {
         if (! hasRolledBefore(msg.sender)) {
             rollers[msg.sender] = true;
             rollerAddresses.push(msg.sender);
-            diceRollee.hasRolled = true;
         }
 
-        currentRoll[msg.sender] = diceRollee;
         emit DiceRolled(requestId, msg.sender);
         uint256 randomness = (block.timestamp + block.difficulty);
         fulfillRandomness(requestId, randomness);

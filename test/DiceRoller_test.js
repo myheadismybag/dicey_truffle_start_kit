@@ -56,8 +56,8 @@ contract('DiceRoller', accounts => {
   // });
 
   // Test case
-  it('will return false from hasRolledOnce when an address has not rolled yet.', async function() {
-    const hasRolled = await diceRoller.hasRolledOnce( addr1 );
+  it('will return false from hasRolledBefore when an address has not rolled yet.', async function() {
+    const hasRolled = await diceRoller.hasRolledBefore( addr1 );
     assert.equal(hasRolled, false, "Unrolled address should return false");
     // expect(hasRolled).to.equal(false);
   });
@@ -103,7 +103,7 @@ contract('DiceRoller', accounts => {
       console.log('1.')
       let hasRolled;
 
-      // let hasRolled = await diceRoller.hasRolledOnce( addr1 );
+      // let hasRolled = await diceRoller.hasRolledBefore( addr1 );
       hasRolled = await diceRoller.hasRolledBefore( addr1 );
       expect(hasRolled).to.equal(false);
 
@@ -134,8 +134,8 @@ contract('DiceRoller', accounts => {
     }
   });
 
-  it('will return true from hasRolledOnce when an address has called hasRolled.', async function() {
-    let hasRolled = await diceRoller.hasRolledOnce( addr1 );
+  it('will return true from hasRolledBefore when an address has called hasRolled.', async function() {
+    let hasRolled = await diceRoller.hasRolledBefore( addr1 );
     // assert.equal(hasRolled, false, "Address should return true");
     expect(hasRolled).to.equal(false);
 
@@ -145,14 +145,14 @@ contract('DiceRoller', accounts => {
     const result = 13;
     let tx = await diceRoller.hasRolled(numberOfDie, dieSize, adjustment, result);
     // await tx.wait();
-    hasRolled = await diceRoller.hasRolledOnce( addr1 );
+    hasRolled = await diceRoller.hasRolledBefore( addr1 );
     // assert.equal(hasRolled, true, "Address should return true");
     expect(hasRolled).to.equal(true);
 
     // Rolling again will not change the result
     tx = await diceRoller.hasRolled(numberOfDie, dieSize, adjustment, result);
     // await tx.wait();
-    hasRolled = await diceRoller.hasRolledOnce( addr1 );
+    hasRolled = await diceRoller.hasRolledBefore( addr1 );
     // assert.equal(hasRolled, true, "Address should return true");
     expect(hasRolled).to.equal(true);
   });
@@ -268,7 +268,7 @@ contract('DiceRoller', accounts => {
       let tx = await diceRoller.rollDiceFast(numberOfDie, dieSize, adjustment);
       // console.log(tx)
 
-      let hasRolled = await diceRoller.hasRolledOnce( addr1 );
+      let hasRolled = await diceRoller.hasRolledBefore( addr1 );
       assert.equal(hasRolled, true, "Address should return true");
 
       let userRolls = await diceRoller.getUserRolls(addr1)
@@ -363,50 +363,77 @@ contract('DiceRoller', accounts => {
 
 
   it('will return an array from getUserRolls for all rolls by an address when they roll.', async function() {
+    // no one rolled yet
     let totalUsers = await diceRoller.getAllUsersCount()
     assert.equal(totalUsers.toNumber(), 0, "totalUsers should be 0");
 
-    let hasRolled = await diceRoller.hasRolledOnce( addr1 );
+    // addr1 has not rolled
+    let hasRolled = await diceRoller.hasRolledBefore( addr1 );
     assert.equal(hasRolled, false, "Address should return false");
 
-    hasRolled = await diceRoller.hasRolledOnce( addr1 );
+    // addr2 has not rolled
+    hasRolled = await diceRoller.hasRolledBefore( addr2 );
     assert.equal(hasRolled, false, "Address should return false");
 
     const numberOfDie = 4;
     const dieSize = 10;
     const adjustment = 0;
     const result = 13;
-    // let tx = await diceRoller.hasRolled(numberOfDie, dieSize, adjustment, result);
+    // addr1 is rolling using fake randomness
     await diceRoller.rollDiceFast(numberOfDie, dieSize, adjustment);
 
-    hasRolled = await diceRoller.hasRolledOnce( addr1 );
+    // addr1 should be seen as having rolled
+    hasRolled = await diceRoller.hasRolledBefore( addr1 );
     assert.equal(hasRolled, true, "Address should return true");
 
+    // one user should be seen as having rolled
     totalUsers = await diceRoller.getAllUsersCount()
     assert.equal(totalUsers.toNumber(), 1, "totalUsers should be 1");
 
+    // be able to retrieve addr1's roll history
     let userRolls = await diceRoller.getUserRolls(addr1)
     assert.equal(userRolls.length, 1, "getUserRolls should be 1");
+    // console.log('userRoll: ' + JSON.stringify(userRolls))
 
+    // verify the roll history data
+    const rollerData = diceRolleeArrayToJSON(userRolls);
+    const roll1 = rollerData[0];
+    
+    // address should match the roller's address
+    assert.equal(roll1.address, addr1, "Roller addresses should match");
+
+    // The first structure should match the first roll
+    assert.equal(roll1.numberOfDie, numberOfDie, "Roller addresses should match");
+    assert.equal(roll1.dieSize, dieSize, "Roller addresses should match");
+    assert.equal(roll1.adjustment, adjustment, "Roller addresses should match");
+    // Can't verify the result as it is random
+
+
+    // addr1 is rolling again with a different api
     await diceRoller.hasRolled(numberOfDie, dieSize, adjustment, result);
 
+    // addr1 now has rolled twice
     userRolls = await diceRoller.getUserRolls(addr1)
     assert.equal(userRolls.length, 2, "getUserRolls should be 2");
 
+    // but addr1 is only roller
     totalUsers = await diceRoller.getAllUsersCount()
     assert.equal(totalUsers.toNumber(), 1, "totalUsers should be 1");
 
+    // addr2 has not rolled yet
     userRolls = await diceRoller.getUserRolls(addr2)
     assert.equal(userRolls.length, 0, "getUserRolls should be 0 for address 2");
 
+    // addr2 is rolling
     await diceRoller.rollDiceFast(numberOfDie, dieSize, adjustment, {from: addr2});
 
+    // addr2 now has a roll history
     userRolls = await diceRoller.getUserRolls(addr2)
     assert.equal(userRolls.length, 1, "getUserRolls should be 1 for address 2");
 
+    // now two users have rolled
     totalUsers = await diceRoller.getAllUsersCount()
     assert.equal(totalUsers.toNumber(), 2, "totalUsers should be 2");
-
   });
   
  
@@ -414,10 +441,10 @@ contract('DiceRoller', accounts => {
     let totalUsers = await diceRoller.getAllUsersCount()
     assert.equal(totalUsers.toNumber(), 0, "totalUsers should be 0");
 
-    let hasRolled = await diceRoller.hasRolledOnce( addr1 );
+    let hasRolled = await diceRoller.hasRolledBefore( addr1 );
     assert.equal(hasRolled, false, "Address should return false");
 
-    hasRolled = await diceRoller.hasRolledOnce( addr1 );
+    hasRolled = await diceRoller.hasRolledBefore( addr1 );
     assert.equal(hasRolled, false, "Address should return false");
 
     const numberOfDie = 4;
@@ -427,7 +454,7 @@ contract('DiceRoller', accounts => {
     // let tx = await diceRoller.hasRolled(numberOfDie, dieSize, adjustment, result);
     let tx = await diceRoller.rollDiceFast(numberOfDie, dieSize, adjustment);
 
-    hasRolled = await diceRoller.hasRolledOnce( addr1 );
+    hasRolled = await diceRoller.hasRolledBefore( addr1 );
     assert.equal(hasRolled, true, "Address should return true");
 
     totalUsers = await diceRoller.getAllUsersCount()
@@ -534,12 +561,24 @@ contract('DiceRoller', accounts => {
   });
 });
 
-
+/*
+    struct DiceRollee {
+        address rollee;
+        uint256 timestamp; // When the die were rolled
+        uint256 randomness; // Stored to help verify/debug results
+        uint16 numberOfDie; // 1 = roll once, 4 = roll four die
+        uint16 dieSize; // 6 = 6 sided die, 20 = 20 sided die
+        int16 adjustment; // Can be a positive or negative value
+        int16 result; // Result of all die rolls and adjustment. Can be negative because of a negative adjustment.
+        // Max value can be 1000 (10 * 100 sided die rolled)
+        uint8[] rolledValues; // array of individual rolls. These can only be positive.
+    }
+*/
 // used to convert data returned from a solidity event to a javascript object
 function diceRolleeArrayToJSON(diceRolleeArray) {
   let values = [];
   diceRolleeArray.forEach(element => {
-    const [address, timestamp, randomness, numberOfDie, dieSize, adjustment, result, hasRolled, rolledValues] = element;
+    const [address, timestamp, randomness, numberOfDie, dieSize, adjustment, result, rolledValues] = element;
     values.push({ 
        address,
        timestamp,
@@ -548,7 +587,6 @@ function diceRolleeArrayToJSON(diceRolleeArray) {
        dieSize,
        adjustment,
        result,
-       hasRolled,
        rolledValues
     });
   })
