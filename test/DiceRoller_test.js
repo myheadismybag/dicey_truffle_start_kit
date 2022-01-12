@@ -6,7 +6,7 @@ const { expect, assert } = require('chai');
 contract('DiceRoller', accounts => {
   // const DiceRoller = artifacts.require('DiceRoller')
     const DiceRoller = artifacts.require('DiceRoller')
-    const VRFCoordinatorMock = artifacts.require('VRFCoordinatorMock')
+    // const VRFCoordinatorMock = artifacts.require('VRFCoordinatorMock')
     const { LinkToken } = require('@chainlink/contracts/truffle/v0.4/LinkToken')
     const defaultAccount = accounts[0]
     let randomNumberConsumer, vrfCoordinatorMock, link, keyhash, fee
@@ -27,9 +27,11 @@ contract('DiceRoller', accounts => {
       keyhash = '0x6c3699283bda56ad74f6b855546325b68d482e983852a7a82979cc4807b641f4'
       fee = '1000000000000000000'
       link = await LinkToken.new({ from: defaultAccount })
-      vrfCoordinatorMock = await VRFCoordinatorMock.new(link.address, { from: defaultAccount })
-      // diceRoller = await DiceRoller.new(link.address, keyhash, vrfCoordinatorMock.address, fee, { from: defaultAccount })
-      diceRoller = await DiceRoller.new(vrfCoordinatorMock.address, link.address, keyhash, fee, { from: defaultAccount })
+      const KOVAN_VRF_COORDINATOR = '0xdD3782915140c8f3b190B5D67eAc6dc5760C46E9'
+
+      // vrfCoordinatorMock = await VRFCoordinatorMock.new(link.address, { from: defaultAccount })
+      // diceRoller = await DiceRoller.new(vrfCoordinatorMock.address, link.address, keyhash, fee, { from: defaultAccount })
+      diceRoller = await DiceRoller.new(KOVAN_VRF_COORDINATOR, link.address, keyhash, fee, { from: defaultAccount })
         // constructor(address _vrfCoordinator, address _link, bytes32 _keyHash, uint256 _fee) public
 
       console.log('Contract Address: ' + diceRoller.address);
@@ -47,6 +49,7 @@ contract('DiceRoller', accounts => {
   //       const KOVAN_LINK_TOKEN = '0xa36085F69e2889c224210F603D836748e7dC0088'
   //       const KOVAN_VRF_COORDINATOR = '0xdD3782915140c8f3b190B5D67eAc6dc5760C46E9'
   //       deployer.deploy(DiceRoller, KOVAN_LINK_TOKEN, KOVAN_KEYHASH, KOVAN_VRF_COORDINATOR, KOVAN_FEE)
+          //  diceRoller = await DiceRoller.new(vrfCoordinatorMock.address, link.address, keyhash, fee, { from: defaultAccount })
   //       randomNumberConsumer = await RandomNumberConsumer.new(link.address, keyhash, vrfCoordinatorMock.address, fee, { from: defaultAccount })
 
     
@@ -157,7 +160,7 @@ contract('DiceRoller', accounts => {
     expect(hasRolled).to.equal(true);
   });
 
-  it('will return 0 from getUserRollsCount when an address has not rolled yet.', async function() {
+  it.only('will return 0 from getUserRollsCount when an address has not rolled yet.', async function() {
     let userRollCount = await diceRoller.getUserRollsCount(addr1)
     // assert.equal(userRollCount, 0, "getUserRollsCount should be 0");
     expect(userRollCount.toNumber()).to.equal(0);

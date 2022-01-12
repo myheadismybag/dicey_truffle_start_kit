@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
-//pragma solidity ^0.8.0;
-pragma solidity ^0.6.6;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.4;
+
+// pragma solidity ^0.6.6;
+// pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-//import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
+import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 //import "@openzeppelin/contracts/security/Pausable.sol";
 
 /*
@@ -18,7 +19,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
         100000000000000000 // FEE = 0.1 LINK
     ); 
 */
-contract DiceRoller is Ownable {
+import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
+contract DiceRoller is VRFConsumerBase, Ownable {
     /// Using these values to manipulate the random value on each die roll.
     /// The goal is an attempt to further randomize randomness for each die rolled.
     /**
@@ -104,7 +106,8 @@ contract DiceRoller is Ownable {
         _;
     }
 
-    constructor(address _vrfCoordinator, address _link, bytes32 _keyHash, uint256 _fee) public
+    constructor(address _vrfCoordinator, address _link, bytes32 _keyHash, uint256 _fee)
+        VRFConsumerBase(_vrfCoordinator, _link)
     {
         chainLinkKeyHash = _keyHash;
         chainlinkVRFFee = _fee;
@@ -114,14 +117,14 @@ contract DiceRoller is Ownable {
     receive() external payable {}
 
     function refundTokens() public payable {
-        // LINK.transfer(payable(owner()), getLINKBalance());
+        LINK.transfer(payable(owner()), getLINKBalance());
     }
     
     /**
     * When the contract is killed, make sure to return all unspent tokens back to my wallet.
     */
     function kill() external {
-        // LINK.transfer(owner(), getLINKBalance());
+        LINK.transfer(owner(), getLINKBalance());
         selfdestruct(payable(owner()));
     }
 
@@ -185,7 +188,7 @@ contract DiceRoller is Ownable {
         returns (bytes32 requestId) 
     {
         /// checking LINK balance to make sure we can call the Chainlink VRF.
-        // require(LINK.balanceOf(address(this)) >= chainlinkVRFFee, "Not enough LINK to pay fee");
+        require(LINK.balanceOf(address(this)) >= chainlinkVRFFee, "Not enough LINK to pay fee");
 
         /// Call to Chainlink VRF for randomness
         requestId = keccak256(abi.encodePacked(chainLinkKeyHash, block.timestamp));
@@ -292,7 +295,7 @@ contract DiceRoller is Ownable {
     // https://medium.com/coinmonks/get-token-balance-for-any-eth-address-by-using-smart-contracts-in-js-b603fef2061c
     // returns the amount of LINK tokens this contract has.
     function getLINKBalance() view public returns (uint256) {
-      //  return LINK.balanceOf(address(this));
+       return LINK.balanceOf(address(this));
     }
 
     /**
@@ -308,7 +311,7 @@ contract DiceRoller is Ownable {
      * @param _requestId bytes32
      * @param _randomness The random result returned by the oracle
      */
-    function fulfillRandomness(bytes32 _requestId, uint256 _randomness) internal {
+    function fulfillRandomness(bytes32 _requestId, uint256 _randomness) internal override{
         /// Associate the random value with the roller based on requestId.
         DiceRollee storage rollee = currentRoll[rollersRandomRequest[_requestId]];
         delete rollee.rolledValues;
