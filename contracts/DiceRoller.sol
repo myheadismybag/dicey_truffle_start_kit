@@ -190,8 +190,7 @@ contract DiceRoller is VRFConsumerBase, Ownable {
         require(LINK.balanceOf(address(this)) >= chainlinkVRFFee, "Not enough LINK to pay fee");
 
         /// Call to Chainlink VRF for randomness
-        requestId = keccak256(abi.encodePacked(chainLinkKeyHash, block.timestamp));
-        // requestId = requestRandomness(chainLinkKeyHash, chainlinkVRFFee);
+        requestId = requestRandomness(chainLinkKeyHash, chainlinkVRFFee);
         rollersRandomRequest[requestId] = msg.sender;
 
         DiceRollee memory diceRollee = DiceRollee({
