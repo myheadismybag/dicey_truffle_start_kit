@@ -6,7 +6,7 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 // import "@chainlink/contracts/src/v0.6/VRFConsumerBase.sol";
-//import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
 
 /*
     https://docs.chain.link/docs/vrf-contracts/
@@ -19,7 +19,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
         100000000000000000 // FEE = 0.1 LINK
     ); 
 */
-contract DiceRoller is Ownable {
+contract DiceRoller is Pausable, Ownable {
     /// Using these values to manipulate the random value on each die roll.
     /// The goal is an attempt to further randomize randomness for each die rolled.
     /**
@@ -118,7 +118,29 @@ contract DiceRoller is Ownable {
     function refundTokens() public payable {
         // LINK.transfer(payable(owner()), getLINKBalance());
     }
-    
+
+    /**
+     * @dev Triggers stopped state.
+     *
+     * Requirements:
+     *
+     * - The contract must not be paused.
+     */
+    function pause() external virtual onlyOwner whenNotPaused {
+       _pause();
+    }
+
+    /**
+     * @dev Returns to normal state.
+     *
+     * Requirements:
+     *
+     * - The contract must be paused.
+     */
+    function unpause() external virtual onlyOwner whenPaused {
+        _unpause();
+    }
+
     /**
     * When the contract is killed, make sure to return all unspent tokens back to my wallet.
     */
@@ -144,6 +166,7 @@ contract DiceRoller is Ownable {
     */
     function hasRolled(uint8 _numberOfDie, uint8 _dieSize, int8 _adjustment, int8 _result) 
         public 
+        whenNotPaused
         validateNumberOfDie(_numberOfDie)
         validateDieSize(_dieSize)
         validateAdjustment(_adjustment)
@@ -181,6 +204,7 @@ contract DiceRoller is Ownable {
         uint8 _dieSize, 
         int8 _adjustment) 
         public 
+        whenNotPaused
         validateNumberOfDie(_numberOfDie)
         validateDieSize(_dieSize)
         validateAdjustment(_adjustment)
@@ -230,6 +254,7 @@ contract DiceRoller is Ownable {
         uint8 _dieSize, 
         int8 _adjustment) 
         public 
+        whenNotPaused
         validateNumberOfDie(_numberOfDie)
         validateDieSize(_dieSize)
         validateAdjustment(_adjustment)
