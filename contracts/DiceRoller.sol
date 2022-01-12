@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+// pragma solidity ^0.8.4;
 
-// pragma solidity ^0.6.6;
-// pragma experimental ABIEncoderV2;
+pragma solidity ^0.6.6;
+pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
+import "@chainlink/contracts/src/v0.6/VRFConsumerBase.sol";
 //import "@openzeppelin/contracts/security/Pausable.sol";
 
 /*
@@ -19,7 +19,6 @@ import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
         100000000000000000 // FEE = 0.1 LINK
     ); 
 */
-import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 contract DiceRoller is VRFConsumerBase, Ownable {
     /// Using these values to manipulate the random value on each die roll.
     /// The goal is an attempt to further randomize randomness for each die rolled.
@@ -106,7 +105,7 @@ contract DiceRoller is VRFConsumerBase, Ownable {
         _;
     }
 
-    constructor(address _vrfCoordinator, address _link, bytes32 _keyHash, uint256 _fee)
+    constructor(address _vrfCoordinator, address _link, bytes32 _keyHash, uint256 _fee) public
         VRFConsumerBase(_vrfCoordinator, _link)
     {
         chainLinkKeyHash = _keyHash;

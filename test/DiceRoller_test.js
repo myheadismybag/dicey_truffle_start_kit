@@ -160,7 +160,7 @@ contract('DiceRoller', accounts => {
     expect(hasRolled).to.equal(true);
   });
 
-  it.only('will return 0 from getUserRollsCount when an address has not rolled yet.', async function() {
+  it('will return 0 from getUserRollsCount when an address has not rolled yet.', async function() {
     let userRollCount = await diceRoller.getUserRollsCount(addr1)
     // assert.equal(userRollCount, 0, "getUserRollsCount should be 0");
     expect(userRollCount.toNumber()).to.equal(0);
