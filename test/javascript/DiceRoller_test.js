@@ -1,16 +1,10 @@
 const { expect, assert } = require('chai');
 
-
-
 // Start test block
 contract('DiceRoller', accounts => {
-  // const DiceRoller = artifacts.require('DiceRoller')
-    const DiceRoller = artifacts.require('DiceRoller')
-    // const VRFCoordinatorMock = artifacts.require('VRFCoordinatorMock')
-    // const { LinkToken } = require('@chainlink/contracts/truffle/v0.4/LinkToken')
-    // const { LinkToken } = require('../node_modules/@chainlink/contracts/src/v0.4/LinkToken')
-    const defaultAccount = accounts[0]
-    let randomNumberConsumer, vrfCoordinatorMock, link, keyhash, fee
+  const DiceRoller = artifacts.require('DiceRoller')
+  const defaultAccount = accounts[0]
+  let link, keyhash, fee
 
   let diceRoller;
   const addr1 = accounts[0]
@@ -22,42 +16,13 @@ contract('DiceRoller', accounts => {
   console.log('aaaa: ' + addr2)
 
   beforeEach(async () => {
-      // LinkToken.setProvider(web3.currentProvider)
-      // Oracle.setProvider(web3.currentProvider)
-
-      keyhash = '0x6c3699283bda56ad74f6b855546325b68d482e983852a7a82979cc4807b641f4'
-      fee = '1000000000000000000'
-      link = '0xa36085F69e2889c224210F603D836748e7dC0088'; //await LinkToken.new({ from: defaultAccount })
-      const KOVAN_VRF_COORDINATOR = '0xdD3782915140c8f3b190B5D67eAc6dc5760C46E9'
-
-      // vrfCoordinatorMock = await VRFCoordinatorMock.new(link.address, { from: defaultAccount })
-      // diceRoller = await DiceRoller.new(vrfCoordinatorMock.address, link.address, keyhash, fee, { from: defaultAccount })
-      diceRoller = await DiceRoller.new(KOVAN_VRF_COORDINATOR, link, keyhash, fee, { from: defaultAccount })
-        // constructor(address _vrfCoordinator, address _link, bytes32 _keyHash, uint256 _fee) public
-
-      console.log('Contract Address: ' + diceRoller.address);
-
+    keyhash = '0x6c3699283bda56ad74f6b855546325b68d482e983852a7a82979cc4807b641f4'
+    fee = '1000000000000000000'
+    link = '0xa36085F69e2889c224210F603D836748e7dC0088'; //await LinkToken.new({ from: defaultAccount })
+    const KOVAN_VRF_COORDINATOR = '0xdD3782915140c8f3b190B5D67eAc6dc5760C46E9'
+    diceRoller = await DiceRoller.new(KOVAN_VRF_COORDINATOR, link, keyhash, fee, { from: defaultAccount })
+    console.log('Contract Address: ' + diceRoller.address);
   })
-  // beforeEach(async() => {
-  //   // diceRoller = await DiceRoller.new();
-  //   // diceRoller = await DiceRoller.new("0xdD3782915140c8f3b190B5D67eAc6dc5760C46E9",
-  //   // "0xa36085F69e2889c224210F603D836748e7dC0088",
-  //   // "0x6c3699283bda56ad74f6b855546325b68d482e983852a7a82979cc4807b641f4",
-  //   // "100000000000000000");
-  //   // await diceRoller.deployed();
-  //       const KOVAN_KEYHASH = '0x6c3699283bda56ad74f6b855546325b68d482e983852a7a82979cc4807b641f4'
-  //       const KOVAN_FEE = '100000000000000000'
-  //       const KOVAN_LINK_TOKEN = '0xa36085F69e2889c224210F603D836748e7dC0088'
-  //       const KOVAN_VRF_COORDINATOR = '0xdD3782915140c8f3b190B5D67eAc6dc5760C46E9'
-  //       deployer.deploy(DiceRoller, KOVAN_LINK_TOKEN, KOVAN_KEYHASH, KOVAN_VRF_COORDINATOR, KOVAN_FEE)
-          //  diceRoller = await DiceRoller.new(vrfCoordinatorMock.address, link.address, keyhash, fee, { from: defaultAccount })
-  //       randomNumberConsumer = await RandomNumberConsumer.new(link.address, keyhash, vrfCoordinatorMock.address, fee, { from: defaultAccount })
-
-    
-  //   //diceRoller = await DiceRoller.attach("0x148fCAfca00Ee3fFFf96ae01F9c9C91C8824CD36"); // 0xCE0B6Dfe0B74c66853E931519068892eA0C48f41
-
-  //   console.log('Contract Address: ' + diceRoller);
-  // });
 
   // Test case
   it('will return false from hasRolledBefore when an address has not rolled yet.', async function() {

@@ -34,7 +34,7 @@ module.exports = {
       settings: {
         optimizer: {
           enabled: true,
-          runs: 500   // Optimize for how many times you intend to run the code
+          runs: 1500   // Optimize for how many times you intend to run the code
         },
       },
     },
@@ -42,5 +42,12 @@ module.exports = {
   mocha: {
     enableTimeouts: false,
     before_timeout: 240000 // Here is 2min but can be whatever timeout is suitable for you.
+  },
+  // to use: npx truffle run verify DiceRoller --network kovan
+  plugins: [
+    'truffle-plugin-verify'
+  ],
+   api_keys: {
+    etherscan: process.env.ETHERSCAN_API
   }
 }
